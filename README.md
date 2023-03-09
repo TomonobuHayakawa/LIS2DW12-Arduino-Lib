@@ -9,6 +9,17 @@ This is an arduino IDE library to control the LIS2DW12.  It can be configured to
 
 This has been tested with Arduino Nano architecture.
 
+
+## For Spresense
+-------------------
+
+![](https://baseec-img-mng.akamaized.net/images/item/origin/d6d02b72398b2c53ce1a90ef35721a68.jpg?imformat=generic&q=90&im=Resize,width=640,type=normal)
+
+device : https://nextstep.official.ec/items/71388889
+
+Now, I have only checked "SimpleRead.ino".
+
+
 Repository Contents
 -------------------
 

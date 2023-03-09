@@ -194,7 +194,7 @@ status_t LIS2DW12Core::readRegisterRegion(uint8_t *outputPointer , uint8_t offse
 //****************************************************************************//
 status_t LIS2DW12Core::readRegister(uint8_t* outputPointer, uint8_t offset) {
 	//Return value
-	uint8_t result;
+	uint8_t result = 0xFF;
 	uint8_t numBytes = 1;
 	status_t returnError = IMU_SUCCESS;
 
@@ -234,6 +234,7 @@ status_t LIS2DW12Core::readRegister(uint8_t* outputPointer, uint8_t offset) {
 		break;
 
 	default:
+		returnError = IMU_NOT_SUPPORTED;
 		break;
 	}
 
@@ -324,7 +325,7 @@ LIS2DW12::LIS2DW12( uint8_t busType, uint8_t inputArg, SPISettings settingArg ) 
 	
 	// CTRL2
 	settings.csPuDisc			= 0;		// 0 = pull-up connected to CS pin
-	settings.i2cDisable			= 1;		// 0 = i2c enable, 1 = i2c disable
+	settings.i2cDisable			= 0;		// 0 = i2c enable, 1 = i2c disable
 	
 	// CTRL3
 	settings.ppOd				= 0;		// 0 = push-pull, 1 = open-drain
@@ -348,6 +349,13 @@ LIS2DW12::LIS2DW12( uint8_t busType, uint8_t inputArg, SPISettings settingArg ) 
 
 }
 
+LIS2DW12::LIS2DW12( uint8_t busType, uint8_t inputArg ) : LIS2DW12Core( busType, inputArg, SPISettings(0, MSBFIRST, SPI_MODE3) )
+{
+	//Construct with these default settings
+	allOnesCounter 				= 0;
+	nonSuccessCounter 			= 0;
+}
+
 //****************************************************************************//
 //
 //  Configuration section
@@ -357,6 +365,14 @@ LIS2DW12::LIS2DW12( uint8_t busType, uint8_t inputArg, SPISettings settingArg ) 
 //  "myIMU.settings.accelEnabled = 1;" to configure before calling .begin();
 //
 //****************************************************************************//
+status_t LIS2DW12::begin(SensorSettings &sensor)
+{
+	// Setting sensor parameter
+	settings = sensor;
+	return begin();
+
+}
+
 status_t LIS2DW12::begin()
 {
 	//Check the settings structure values to determine how to setup the device

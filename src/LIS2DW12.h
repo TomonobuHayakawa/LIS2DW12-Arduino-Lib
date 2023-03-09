@@ -51,7 +51,7 @@ class LIS2DW12Core
 public:
 	LIS2DW12Core( uint8_t );
 	LIS2DW12Core( uint8_t, uint8_t );
-	LIS2DW12Core( uint8_t, uint8_t, SPISettings);
+	LIS2DW12Core( uint8_t, uint8_t, SPISettings );
 	~LIS2DW12Core() = default;
 	
 	status_t beginCore( void );
@@ -138,10 +138,12 @@ public:
 	//Constructor generates default SensorSettings.
 	//(over-ride after construction if desired)
 	LIS2DW12( uint8_t busType, uint8_t inputArg, SPISettings settingArg );
+	LIS2DW12( uint8_t busType, uint8_t inputArg );
 	~LIS2DW12() = default;
 	
 	//Call to apply SensorSettings
 	status_t begin(void);
+	status_t begin(SensorSettings&);
 
 	//Returns the raw bits from the sensor cast as 16-bit signed integers
 	int16_t readRawAccelX( void );
