@@ -36,25 +36,55 @@ Distributed as-is; no warranty is given.
 ******************************************************************************/
 
 #include <LIS2DW12.h>
-#include "SPI.h"
+#include "Wire.h"
 
-#define SPEED     62500
+SensorSettings LIS2DW12_settings;
 
 //Interrupt variables
-#define int1Pin 2  //Use pin 2 for int.0 on uno
+#define int1Pin 22 
 uint8_t int1Status = 0;
-uint8_t   result;
+uint8_t result;
 
-LIS2DW12 myIMU(SPI_MODE, 10, SPISettings(SPEED, MSBFIRST, SPI_MODE3)); //Default constructor is I2C, addr 0x19
+//Create an instances of the driver class
+LIS2DW12 Sensor( I2C_MODE, 0x19 );
+
+void set_sensor()
+{
+  LIS2DW12_settings.mode       = 1;    // 0 = low power, 1 = high performance, 2 = single data conversion
+  LIS2DW12_settings.lpMode     = 0;    // 1 = lp mode 1 (12 bit), 2 = lp mode 2 (14 bit) ...
+  LIS2DW12_settings.odr        = 200;  // Hz. Default is 0 = power down
+  
+  // CTRL2
+  LIS2DW12_settings.csPuDisc   = 0;    // 0 = pull-up connected to CS pin
+  LIS2DW12_settings.i2cDisable = 0;    // 0 = i2c enable, 1 = i2c disable
+  
+  // CTRL3
+  LIS2DW12_settings.ppOd       = 0;    // 0 = push-pull, 1 = open-drain
+  LIS2DW12_settings.lir        = 0;    // 0 = interrupt not latched, 1 = interrupt signal latched
+  LIS2DW12_settings.hiActive   = 0;    // 0 = active high, 1 = active low
+  
+  // CTRL6
+  LIS2DW12_settings.fs         = 4;    // 2g, 4g, 8g, 16g
+  LIS2DW12_settings.lowNoise   = 1;    // 1 = low noise enabled
+  
+  LIS2DW12_settings.tapTh      = 0x06;   // threshold for tap detection
+  LIS2DW12_settings.latency    = 0x20;   // latency for double tap detection ((0x40 >> 4) * 32 / ODR)
+  LIS2DW12_settings.quiet      = 0x02;   // quiet time window for double tap detection ((0x08 >> 2) * 4 / ODR)
+  LIS2DW12_settings.shock      = 0x02;   // shock time window for double tap detection (0x02 * 8 / ODR)
+  
+  LIS2DW12_settings.accelSensitivity = 0.488;  // set correct sensitivity from LIS2DW12 Application Notes (FS = 2g, resolution = 14bit)
+                                               // this is a function of full scale setting (FS) and resolution (12 or 14 bit format)
+}
 
 void setup()
 {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	delay(1000); //relax...
 	Serial.println("Processor came out of reset.\n");
 
 	//Call .beginCore() to configure the IMU
-	if( myIMU.begin() != 0 )
+	set_sensor();
+	if( Sensor.begin(LIS2DW12_settings) != 0 )
 	{
 		Serial.print("Error at beginCore().\n");
 	}
@@ -63,7 +93,7 @@ void setup()
 		Serial.print("\nbeginCore() passed.\n");
 	}
 
-	if( myIMU.initDoubleTap(3) )            // 0: only X axis, 1: only Y axis, 2: only Z axis, >2: all axis
+	if( Sensor.initDoubleTap(3) )            // 0: only X axis, 1: only Y axis, 2: only Z axis, >2: all axis
 	{
 		Serial.println("Problem configuring the device.");
 	}
@@ -74,8 +104,8 @@ void setup()
 
 	//Configure the atmega interrupt pin
 	pinMode(int1Pin, INPUT);
-	attachInterrupt(digitalPinToInterrupt(int1Pin), int1ISR, LOW);
-	
+	attachInterrupt(int1Pin, int1ISR, RISING);
+
 }
 
 
@@ -84,15 +114,15 @@ void loop()
 	if(int1Status)  //If ISR has been serviced at least once
 	{
 		Serial.print("Double-tap event\n");
-    myIMU.readRegister(&result, 0x3B);
-    //Clear the ISR counter
-    int1Status = 0;
+		Sensor.readRegister(&result, 0x3B);
+		//Clear the ISR counter
+		int1Status = 0;
 	}
+	usleep(10*1000);
 }
-
 
 void int1ISR()
 {
-	//Serial.println("Interrupt serviced.");
+	puts("Interrupt serviced.");
 	int1Status = 1;
 }

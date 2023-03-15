@@ -17,7 +17,7 @@ This has been tested with Arduino Nano architecture.
 
 device : https://nextstep.official.ec/items/71388889
 
-Now, I have only checked "SimpleRead.ino".
+Now, I have only checked "SimpleRead.ino" and "InterruptHWTapConfig.ino".
 
 
 Repository Contents
